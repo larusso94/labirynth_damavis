@@ -6,7 +6,7 @@ def main():
     labyrinth.print_labyrinth()
 
     # Initialize the rod with the starting coordinates and orientation
-    rod = Rod(1, 0, 0)
+    rod = Rod()
 
     # Initialize the pathfinder
     pathfinder = Pathfinder(labyrinth, rod)
