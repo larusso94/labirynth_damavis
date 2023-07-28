@@ -1,12 +1,18 @@
 from classes import *
 
-# usage
-rod = Rod(x=1,y=0,orientation=0)
+def main():
+    # Initialize the labyrinth from a text file
+    labyrinth = Labyrinth('input.txt')
+    labyrinth.print_labyrinth()
 
-labyrinth = Labyrinth('input.txt')
+    # Initialize the rod with the starting coordinates and orientation
+    rod = Rod(1, 0, 0)
 
-labyrinth.print_labyrinth()
+    # Initialize the pathfinder
+    pathfinder = Pathfinder(labyrinth, rod)
 
-pathfinder = Pathfinder(labyrinth, rod)
+    # Run the BFS to find the shortest path
+    print(pathfinder.perform_bfs())
 
-print(pathfinder.bfs())
+if __name__ == "__main__":
+    main()
