@@ -6,17 +6,19 @@ class TestRod(unittest.TestCase):
         self.rod = Rod(1, 2, 0)
 
     def test_rod_initialization(self):
-        self.assertEqual(self.rod.x, 2)
-        self.assertEqual(self.rod.y, 1)
+        self.assertEqual(self.rod.x_coordinate, 2)
+        self.assertEqual(self.rod.y_coordinate, 1)
         self.assertEqual(self.rod.orientation, 0)
+
 
 class TestLabyrinth(unittest.TestCase):
     def setUp(self):
         self.labyrinth = Labyrinth("input.txt")
 
     def test_labyrinth_initialization(self):
-        self.assertEqual(self.labyrinth.n, 5)
-        self.assertEqual(self.labyrinth.m, 9)
+        self.assertEqual(self.labyrinth.num_rows, 5)
+        self.assertEqual(self.labyrinth.num_columns, 9)
+
 
 class TestPathfinder(unittest.TestCase):
     def setUp(self):
@@ -46,3 +48,4 @@ class TestPathfinder(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

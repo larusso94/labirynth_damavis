@@ -1,93 +1,107 @@
 from collections import deque
 
 class Rod:
-    def __init__(self, y=0, x=1, orientation = 0):
-        # Defines the initial position and orientation of the rod
-        self.y = y
-        self.x = x
+    def __init__(self, y_coordinate=0, x_coordinate=1, orientation=0):
+        """Initialize the rod with given position and orientation"""
+        self.y_coordinate = y_coordinate
+        self.x_coordinate = x_coordinate
         self.orientation = orientation
+
 
 class Labyrinth:
     def __init__(self, file):
-        # Opens the file and reads the labyrinth layout
-        with open(file, 'r') as f:
-            self.grid = [list(line.strip()) for line in f]
-        self.n, self.m = len(self.grid), len(self.grid[0])
+        """Read the labyrinth layout from a given file"""
+        try:
+            with open(file, 'r') as f:
+                self.grid = [list(line.strip()) for line in f]
+        except IOError:
+            print(f"Error: File {file} not found.")
+            return None
+
+        self.num_rows, self.num_columns = len(self.grid), len(self.grid[0])
 
     def print_labyrinth(self):
-        print('Filas',self.n,'Columnas', self.m)
-        # Prints the labyrinth layout
+        """Print the labyrinth layout"""
+        print('Number of rows:', self.num_rows, 'Number of columns:', self.num_columns)
         for row in self.grid:
             print(''.join(row))
 
+
 class Pathfinder:
+    # Define movement directions
+    DIRECTIONS = [(0, -1), (1, 0), (0, 1), (-1, 0)]
+
     def __init__(self, labyrinth, rod):
+        """Initialize the pathfinder with given labyrinth and rod"""
         self.labyrinth = labyrinth
         self.rod = rod
 
-        # Initializes the visited array and queue for the BFS traversal
-        self.visited = [[[False for _ in range(self.labyrinth.m)] for _ in range(self.labyrinth.n)] for _ in range(2)]
+        # Initialize the visited array and queue for the BFS traversal
+        self.visited = [[[False for _ in range(self.labyrinth.num_columns)] for _ in range(self.labyrinth.num_rows)] for _ in range(2)]
         self.queue = deque()
-        
-        # Defines the movement directions
-        self.dx = [0, 1, 0, -1]
-        self.dy = [-1, 0, 1, 0]
 
     def is_end_of_labyrinth(self, y, x, orientation):
-        # Checks if the current position is the end of the labyrinth
-        return (orientation == 0 and x == self.labyrinth.m-2 and y == self.labyrinth.n-1) or (orientation == 1 and x == self.labyrinth.m-1 and y == self.labyrinth.n-2)
-    
-    def is_move_valid(self, ny, nx, orientation):
+        """Check if the current position is the end of the labyrinth"""
+        return (orientation == 0 and x == self.labyrinth.num_columns - 2 and y == self.labyrinth.num_rows - 1) or \
+               (orientation == 1 and x == self.labyrinth.num_columns - 1 and y == self.labyrinth.num_rows - 2)
+
+    def is_move_valid(self, new_y, new_x, orientation):
+        """Check if the new position is valid"""
         grid = self.labyrinth.grid
-        
-        # Returns false if the new position is out of bounds
-        if nx < 0 or nx >= self.labyrinth.m or ny < 0 or ny >= self.labyrinth.n:
+
+        # Return False if the new position is out of bounds
+        if new_x < 0 or new_x >= self.labyrinth.num_columns or new_y < 0 or new_y >= self.labyrinth.num_rows:
             return False
 
-        # Checks if the new position goes outside the labyrinth when rotating
-        if (orientation == 0 and (nx - 1 < 0 or nx + 1 >= self.labyrinth.m)) or (orientation == 1 and (ny - 1 < 0 or ny + 1 >= self.labyrinth.n)):
-            return False
-            
-        # Returns false if the new position is already visited or blocked
-        if self.visited[orientation][ny][nx] or grid[ny][nx] == '#':
+        # Check if the new position goes outside the labyrinth when rotating
+        if (orientation == 0 and (new_x - 1 < 0 or new_x + 1 >= self.labyrinth.num_columns)) or \
+           (orientation == 1 and (new_y - 1 < 0 or new_y + 1 >= self.labyrinth.num_rows)):
             return False
 
-        # Checks the validity of the move based on the rod's orientation
-        if (orientation == 0 and (grid[ny][nx - 1] == '#'  or grid[ny][nx + 1] == '#')) or (orientation == 1 and (grid[ny - 1][nx] == '#'  or grid[ny + 1][nx] == '#')):
+        # Return False if the new position is already visited or blocked
+        if self.visited[orientation][new_y][new_x] or grid[new_y][new_x] == '#':
+            return False
+
+        # Check the validity of the move based on the rod's orientation
+        if (orientation == 0 and (grid[new_y][new_x - 1] == '#' or grid[new_y][new_x + 1] == '#')) or \
+           (orientation == 1 and (grid[new_y - 1][new_x] == '#' or grid[new_y + 1][new_x] == '#')):
             return False
 
         return True
 
     def are_corners_clear(self, y, x):
-        # Checks the corners for blocks in order to determine if the rod can rotate
-        if x - 1 < 0 or y - 1 < 0 or x + 1 >= self.labyrinth.m or y + 1 >= self.labyrinth.n or self.labyrinth.grid[y - 1][x] == '#' or self.labyrinth.grid[y + 1][x] == '#' or self.labyrinth.grid[y][x - 1] == '#' or self.labyrinth.grid[y][x + 1] == '#':
+        """Check the corners for blocks to determine if the rod can rotate"""
+        if x - 1 < 0 or y - 1 < 0 or x + 1 >= self.labyrinth.num_columns or y + 1 >= self.labyrinth.num_rows or \
+           self.labyrinth.grid[y - 1][x] == '#' or self.labyrinth.grid[y + 1][x] == '#' or \
+           self.labyrinth.grid[y][x - 1] == '#' or self.labyrinth.grid[y][x + 1] == '#':
             return False
 
         return True
 
     def is_rotation_possible(self, y, x, orientation):
-        # Returns true if rotation is possible, i.e., both the corners are clear and the move is valid with the new orientation
+        """Check if rotation is possible"""
+        # Both the corners are clear and the move is valid with the new orientation
         return self.are_corners_clear(y, x) and self.is_move_valid(y, x, 1 - orientation)
 
     def perform_bfs(self):
-        # Starts the BFS traversal
-        self.queue.append((self.rod.y, self.rod.x, self.rod.orientation, 0))
-        self.visited[self.rod.orientation][self.rod.y][self.rod.x] = True
+        """Perform BFS traversal"""
+        self.queue.append((self.rod.y_coordinate, self.rod.x_coordinate, self.rod.orientation, 0))
+        self.visited[self.rod.orientation][self.rod.y_coordinate][self.rod.x_coordinate] = True
 
         while self.queue:
             y, x, orientation, moves = self.queue.popleft()
-            
-            if self.is_end_of_labyrinth(y,x,orientation):
+
+            if self.is_end_of_labyrinth(y, x, orientation):
                 return moves
-            
-            for i in range(4):
-                ny, nx = y + self.dy[i], x + self.dx[i]
-                if not self.is_move_valid(ny, nx, orientation):
+
+            for dx, dy in self.DIRECTIONS:
+                new_y, new_x = y + dy, x + dx
+                if not self.is_move_valid(new_y, new_x, orientation):
                     continue
-                
-                self.visited[orientation][ny][nx] = True
-                self.queue.append((ny, nx, orientation, moves + 1))
-            
+
+                self.visited[orientation][new_y][new_x] = True
+                self.queue.append((new_y, new_x, orientation, moves + 1))
+
             if self.is_rotation_possible(y, x, orientation):
                 orientation = 1 - orientation
                 self.visited[orientation][y][x] = True
